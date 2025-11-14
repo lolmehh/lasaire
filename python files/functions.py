@@ -3,27 +3,86 @@ import math
 import pygame
 
 # =========================
-# GRID (still as background)
+# WORLD / CAMERA SETTINGS
 # =========================
 
 TILE_SIZE = 40
 GRID_COLOR = (60, 60, 60)
 
+# Size of your game world in pixels (not the same as screen size)
+WORLD_WIDTH = 4000
+WORLD_HEIGHT = 4000
+
+BACKGROUND_COLOR = (20, 20, 20)
+
+
+# =========================
+# CAMERA
+# =========================
+
+class Camera:
+    def __init__(self, screen, world_width, world_height):
+        self.screen = screen
+        self.world_width = world_width
+        self.world_height = world_height
+        self.offset_x = 0
+        self.offset_y = 0
+
+    def update(self, target_x, target_y):
+        """
+        Center the camera on (target_x, target_y),
+        and clamp so we don't go outside the world.
+        """
+        screen_w, screen_h = self.screen.get_size()
+
+        # center on target
+        self.offset_x = target_x - screen_w / 2
+        self.offset_y = target_y - screen_h / 2
+
+        # clamp to world bounds
+        self.offset_x = max(0, min(self.offset_x, self.world_width - screen_w))
+        self.offset_y = max(0, min(self.offset_y, self.world_height - screen_h))
+
+    def world_to_screen(self, x, y):
+        """
+        Convert world coordinates (x, y) -> screen coordinates.
+        Use this for any object you draw.
+        """
+        return x - self.offset_x, y - self.offset_y
+
+
+# =========================
+# GRID (BACKGROUND)
+# =========================
 
 class Grid:
     def __init__(self, tile_size=TILE_SIZE):
         self.tile_size = tile_size
 
-    def draw(self, screen):
-        width, height = screen.get_size()
+    def draw(self, screen, camera: Camera):
+        screen_w, screen_h = screen.get_size()
+
+        # We only need to draw lines that fall inside the current view.
+        # Compute which world lines are visible.
+        start_x = int(camera.offset_x // self.tile_size) * self.tile_size
+        end_x = int((camera.offset_x + screen_w) // self.tile_size + 1) * self.tile_size
+
+        start_y = int(camera.offset_y // self.tile_size) * self.tile_size
+        end_y = int((camera.offset_y + screen_h) // self.tile_size + 1) * self.tile_size
 
         # Vertical lines
-        for x in range(0, width, self.tile_size):
-            pygame.draw.line(screen, GRID_COLOR, (x, 0), (x, height))
+        x = start_x
+        while x <= end_x and x <= WORLD_WIDTH:
+            sx, _ = camera.world_to_screen(x, 0)
+            pygame.draw.line(screen, GRID_COLOR, (sx, 0), (sx, screen_h))
+            x += self.tile_size
 
         # Horizontal lines
-        for y in range(0, height, self.tile_size):
-            pygame.draw.line(screen, GRID_COLOR, (0, y), (width, y))
+        y = start_y
+        while y <= end_y and y <= WORLD_HEIGHT:
+            _, sy = camera.world_to_screen(0, y)
+            pygame.draw.line(screen, GRID_COLOR, (0, sy), (screen_w, sy))
+            y += self.tile_size
 
 
 # =========================
@@ -31,8 +90,8 @@ class Grid:
 # =========================
 
 class Player:
-    def __init__(self, x, y, speed=250):
-        # position in pixels (floats for smooth movement)
+    def __init__(self, x, y, speed=300):
+        # world coordinates (floats for smoothness)
         self.x = float(x)
         self.y = float(y)
         self.speed = speed  # pixels per second
@@ -43,7 +102,7 @@ class Player:
         dx = 0
         dy = 0
 
-        # WASD + arrow keys
+        # Hold keys for continuous movement
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             dx -= 1
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
@@ -53,8 +112,8 @@ class Player:
         if keys[pygame.K_DOWN] or keys[pygame.K_s]:
             dy += 1
 
-        # normalize diagonal movement
         if dx != 0 or dy != 0:
+            # Normalize so diagonals are not faster
             length = math.hypot(dx, dy)
             dx /= length
             dy /= length
@@ -62,16 +121,17 @@ class Player:
             self.x += dx * self.speed * dt
             self.y += dy * self.speed * dt
 
-    def clamp_to_screen(self, screen):
-        width, height = screen.get_size()
+    def clamp_to_world(self):
         half = self.size / 2
+        self.x = max(half, min(WORLD_WIDTH - half, self.x))
+        self.y = max(half, min(WORLD_HEIGHT - half, self.y))
 
-        self.x = max(half, min(width - half, self.x))
-        self.y = max(half, min(height - half, self.y))
+    def draw(self, screen, camera: Camera):
+        # Convert center from world -> screen
+        screen_x, screen_y = camera.world_to_screen(self.x, self.y)
 
-    def draw(self, screen):
         rect = pygame.Rect(0, 0, self.size, self.size)
-        rect.center = (int(self.x), int(self.y))
+        rect.center = (int(screen_x), int(screen_y))
         pygame.draw.rect(screen, self.color, rect)
 
 
@@ -82,14 +142,15 @@ class Player:
 def start_game(screen):
     """
     Main game loop.
-    Called from main.py as start_game(screen).
+    main.py calls: start_game(screen)
     """
     clock = pygame.time.Clock()
-    grid = Grid()
 
-    # start player in the middle of the screen
-    width, height = screen.get_size()
-    player = Player(width // 2, height // 2, speed=300)
+    grid = Grid()
+    camera = Camera(screen, WORLD_WIDTH, WORLD_HEIGHT)
+
+    # Start player in the center of the world
+    player = Player(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, speed=300)
 
     running = True
     while running:
@@ -100,26 +161,34 @@ def start_game(screen):
                 pygame.quit()
                 sys.exit()
 
-            # ESC to return to main menu
+            # ESC: return to main menu (back to main.py)
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 running = False
 
-        # --- CONTINUOUS MOVEMENT WHILE KEY IS HELD ---
+        # ---------------------------
+        # UPDATE
+        # ---------------------------
         keys = pygame.key.get_pressed()
         player.handle_input(keys, dt)
-        player.clamp_to_screen(screen)
+        player.clamp_to_world()
 
-        # --- DRAW ---
-        screen.fill((20, 20, 20))
-        grid.draw(screen)
-        player.draw(screen)
+        # Camera focuses the player
+        camera.update(player.x, player.y)
+
+        # ---------------------------
+        # DRAW
+        # ---------------------------
+        screen.fill(BACKGROUND_COLOR)
+
+        grid.draw(screen, camera)
+        player.draw(screen, camera)
 
         pygame.display.flip()
 
-    # when loop ends, we return to the menu in main.py
+    # When loop ends, we return to the menu in main.py
     return
 
 
 def load_game():
-    # placeholder so the Load Game button keeps working
+    # placeholder so the "Load Game" button keeps working
     print("Load game not implemented yet.")
