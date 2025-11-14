@@ -151,7 +151,7 @@ def start_game(screen):
         10,
         button_size,
         button_size,
-        "⚙",
+        "+",
         callback=None,  # we set this just below
         text_color=(255, 255, 255),
         color=(0, 0, 0),
@@ -163,18 +163,25 @@ def start_game(screen):
         "show_grid": True,
     }
 
-    paused = False  # when True, gameplay stops but menu still works
+    paused = False
 
     def on_settings_close():
         nonlocal paused
         paused = False
 
-    # Settings overlay menu
+    def go_back_to_main_menu():
+        # Called when the user clicks "Return to main menu" in Settings
+        nonlocal paused, running
+        paused = False
+        running = False   # this will exit the game loop, then main.py shows the menu again
+
     settings_menu = SettingsMenu(
         screen,
         settings=settings,
         on_close=on_settings_close,
+        on_return_to_menu=go_back_to_main_menu,
     )
+
 
     def open_settings():
         nonlocal paused
