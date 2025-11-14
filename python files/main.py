@@ -10,7 +10,7 @@ def quit_game():
 
 
 def fade_out(screen, color=(0, 0, 0), speed=5):
-    """Simple fade-out transition effect."""
+    #Simple fade-out transition effect.
     fade_surface = pygame.Surface(screen.get_size())
     fade_surface.fill(color)
 
@@ -33,7 +33,7 @@ def main():
 
     # --- Splash Screen ---
     try:
-        splash = pygame.image.load("../pngs/start.png").convert()
+        splash = pygame.image.load("../pngs/splash.png").convert()
         splash = pygame.transform.scale(splash, (screen_width, screen_height))
         screen.blit(splash, (0, 0))
         pygame.display.flip()
@@ -43,11 +43,11 @@ def main():
         print(f"Could not load splash image: {e}")
 
     # --- Menu UI setup ---
-    BACKGROUND = (25, 25, 35)
-    TITLE_COLOR = (255, 255, 255)
+    background_color = (25, 25, 35)
+    title_color = (255, 255, 255)
     title_font = pygame.font.SysFont("georgia", 60)
 
-    title_surface = title_font.render("LASAIRE", True, TITLE_COLOR)
+    title_surface = title_font.render("LASAIRE", True, title_color)
     title_rect = title_surface.get_rect(center=(screen_width // 2, screen_height // 4))
 
     # Button callbacks
@@ -115,7 +115,7 @@ def main():
             for button in buttons:
                 button.handle_event(event)
 
-        screen.fill(BACKGROUND)
+        screen.fill(background_color)
         screen.blit(title_surface, title_rect)
 
         for button in buttons:

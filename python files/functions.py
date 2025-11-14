@@ -1,6 +1,11 @@
+import pygame
 import sys
 import math
-import pygame
+
+from graphs import Button
+from gui import SettingsMenu
+
+from grid import Grid, Player    # or whatever modules you import
 
 # WORLD / CAMERA SETTINGS
 
@@ -126,12 +131,8 @@ class Player:
         rect.center = (int(screen_x), int(screen_y))
         pygame.draw.rect(screen, self.color, rect)
 
-
-# GAME LOOP
-
 def start_game(screen):
-    #Main game loop.
-    #main.py calls: start_game(screen)
+    """Main game loop. main.py calls: start_game(screen)"""
     clock = pygame.time.Clock()
 
     grid = Grid()
@@ -139,6 +140,49 @@ def start_game(screen):
 
     # Start player in the center of the world
     player = Player(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, speed=300)
+
+    # --- GUI / settings ---
+    screen_w, screen_h = screen.get_size()
+    button_size = 50
+
+    # Top-right settings button (⚙)
+    settings_button = Button(
+        screen_w - button_size - 10,
+        10,
+        button_size,
+        button_size,
+        "⚙",
+        callback=None,  # we set this just below
+        text_color=(255, 255, 255),
+        color=(0, 0, 0),
+        hover_color=(80, 80, 80),
+    )
+
+    # Simple settings dict – the menu can change these, the game reads them
+    settings = {
+        "show_grid": True,
+    }
+
+    paused = False  # when True, gameplay stops but menu still works
+
+    def on_settings_close():
+        nonlocal paused
+        paused = False
+
+    # Settings overlay menu
+    settings_menu = SettingsMenu(
+        screen,
+        settings=settings,
+        on_close=on_settings_close,
+    )
+
+    def open_settings():
+        nonlocal paused
+        paused = True
+        settings_menu.open()
+
+    # Hook up button callback now that open_settings exists
+    settings_button.callback = open_settings
 
     running = True
     while running:
@@ -149,28 +193,41 @@ def start_game(screen):
                 pygame.quit()
                 sys.exit()
 
-            # ESC: return to main menu (back to main.py)
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                running = False
+            if settings_menu.visible:
+                # While the menu is open, only it gets the events
+                settings_menu.handle_event(event)
+            else:
+                # ESC: return to main menu (back to main.py)
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    running = False
 
-        # UPDATE
-        keys = pygame.key.get_pressed()
-        player.handle_input(keys, dt)
-        player.clamp_to_world()
+                # Settings button only active when menu is not open
+                settings_button.handle_event(event)
 
-        # Camera focuses the player
-        camera.update(player.x, player.y)
+        if not paused:
+            # UPDATE gameplay
+            keys = pygame.key.get_pressed()
+            player.handle_input(keys, dt)
+            player.clamp_to_world()
+
+            # Camera focuses the player
+            camera.update(player.x, player.y)
 
         # DRAW
         screen.fill(BACKGROUND_COLOR)
 
-        grid.draw(screen, camera)
+        if settings.get("show_grid", True):
+            grid.draw(screen, camera)
+
         player.draw(screen, camera)
+        settings_button.draw(screen)
+        settings_menu.draw()
 
         pygame.display.flip()
 
     # When loop ends, we return to the menu in main.py
     return
+
 
 
 def load_game():
