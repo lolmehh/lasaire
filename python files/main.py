@@ -33,7 +33,7 @@ def main():
 
     # --- Splash Screen ---
     try:
-        splash = pygame.image.load("pngs/start.png").convert()
+        splash = pygame.image.load("../pngs/start.png").convert()
         splash = pygame.transform.scale(splash, (screen_width, screen_height))
         screen.blit(splash, (0, 0))
         pygame.display.flip()
