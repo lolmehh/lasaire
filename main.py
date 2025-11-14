@@ -1,7 +1,7 @@
 import sys
 import pygame
 from graphs import Button, get_screen_resolution
-from functions import start_game, load_game  # gameplay logic
+from functions import start_game, load_game
 
 def quit_game():
     print("Exiting game...")
@@ -33,7 +33,7 @@ def main():
 
     # --- Splash Screen ---
     try:
-        splash = pygame.image.load("start.png").convert()
+        splash = pygame.image.load("pngs/start.png").convert()
         splash = pygame.transform.scale(splash, (screen_width, screen_height))
         screen.blit(splash, (0, 0))
         pygame.display.flip()
