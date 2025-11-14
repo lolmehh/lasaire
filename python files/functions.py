@@ -2,9 +2,7 @@ import sys
 import math
 import pygame
 
-# =========================
 # WORLD / CAMERA SETTINGS
-# =========================
 
 TILE_SIZE = 40
 GRID_COLOR = (60, 60, 60)
@@ -16,9 +14,7 @@ WORLD_HEIGHT = 4000
 BACKGROUND_COLOR = (20, 20, 20)
 
 
-# =========================
 # CAMERA
-# =========================
 
 class Camera:
     def __init__(self, screen, world_width, world_height):
@@ -51,9 +47,7 @@ class Camera:
         return x - self.offset_x, y - self.offset_y
 
 
-# =========================
 # GRID (BACKGROUND)
-# =========================
 
 class Grid:
     def __init__(self, tile_size=TILE_SIZE):
@@ -85,9 +79,7 @@ class Grid:
             y += self.tile_size
 
 
-# =========================
-# PLAYER WITH SMOOTH MOVEMENT
-# =========================
+# movement
 
 class Player:
     def __init__(self, x, y, speed=300):
@@ -135,15 +127,11 @@ class Player:
         pygame.draw.rect(screen, self.color, rect)
 
 
-# =========================
 # GAME LOOP
-# =========================
 
 def start_game(screen):
-    """
-    Main game loop.
-    main.py calls: start_game(screen)
-    """
+    #Main game loop.
+    #main.py calls: start_game(screen)
     clock = pygame.time.Clock()
 
     grid = Grid()
@@ -165,9 +153,7 @@ def start_game(screen):
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 running = False
 
-        # ---------------------------
         # UPDATE
-        # ---------------------------
         keys = pygame.key.get_pressed()
         player.handle_input(keys, dt)
         player.clamp_to_world()
@@ -175,9 +161,7 @@ def start_game(screen):
         # Camera focuses the player
         camera.update(player.x, player.y)
 
-        # ---------------------------
         # DRAW
-        # ---------------------------
         screen.fill(BACKGROUND_COLOR)
 
         grid.draw(screen, camera)
