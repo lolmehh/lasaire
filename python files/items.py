@@ -47,7 +47,7 @@ ITEM_DEFS = {
     "stick": {
         "name": "Stick",
         "category": "weapon",
-        "description": "A weak wooden stick. Better than nothing.",
+        "description": "Something is better than nothing.",
         "damage": 2,
         "heal_amount": 0,
         "value": 1,
@@ -57,7 +57,7 @@ ITEM_DEFS = {
     "rusty_sword": {
         "name": "Rusty Sword",
         "category": "weapon",
-        "description": "Old and dull, but it still hurts.",
+        "description": "Old, but it still hurts.",
         "damage": 5,
         "heal_amount": 0,
         "value": 10,
@@ -66,22 +66,41 @@ ITEM_DEFS = {
     },
 
     # Consumables
-    "small_potion": {
-        "name": "Small Potion",
+    "small_hp_potion": {
+        "name": "Small health potion",
         "category": "consumable",
-        "description": "Heals a little bit of HP.",
+        "description": "Heals a little bit of health.",
         "damage": 0,
         "heal_amount": 20,
         "value": 15,
         "stackable": True,
-        "max_stack": 10,
+        "max_stack": 99,
     },
-
+    "medium_hp_potion": {
+        "name": "Medium health potion",
+        "category": "consumable",
+        "description": "Heals a little bit more of health.",
+        "damage": 0,
+        "heal_amount": 80,
+        "value": 30,
+        "stackable": True,
+        "max_stack": 99,
+    },
+    "large_hp_potion": {
+        "name": "Large health potion",
+        "category": "consumable",
+        "description": "Heals a little bit more of health.",
+        "damage": 0,
+        "heal_amount": 200,
+        "value": 60,
+        "stackable": True,
+        "max_stack": 99,
+    },
     # Mob drops / materials
-    "slime_goop": {
-        "name": "Slime Goop",
+    "slime_goo": {
+        "name": "Slime Goo",
         "category": "material",
-        "description": "Sticky residue from a slime. Yuck.",
+        "description": "Sticky residue from a slime. ew.",
         "damage": 0,
         "heal_amount": 0,
         "value": 2,

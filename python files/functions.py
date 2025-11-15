@@ -31,9 +31,9 @@ def start_game(screen):
     player = Player(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, speed=300)
 
     # Give some starting items so you can see the inventory working
-    player.add_item("rusty_sword", 1)
-    player.add_item("small_potion", 2)
-    player.add_item("slime_goop", 5)
+    player.add_item("rusty_sword", 2)
+    player.add_item("small_hp_potion", 2)
+    player.add_item("slime_goo", 5)
 
     # --- GUI / settings ---
     screen_w, screen_h = screen.get_size()
