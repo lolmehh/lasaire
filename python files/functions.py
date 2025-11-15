@@ -4,10 +4,9 @@ import sys
 from graphs import Button
 from gui import SettingsMenu
 
-from grid import Grid, GRID_WIDTH, GRID_HEIGHT
+from grid import Grid
 from camera import Camera
 from player import Player
-from items import ItemStack
 from inventory_ui import InventoryUI
 
 
@@ -91,9 +90,6 @@ def start_game(screen):
     running = True
     while running:
         dt = clock.tick(60) / 1000.0
-
-        # In case the window was resized
-        screen_w, screen_h = screen.get_size()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

@@ -189,9 +189,9 @@ class InventoryUI:
         # Grid of item slots
         self.item_slots = []  # rebuild each frame
 
-        SLOT_SIZE = 64
-        SLOT_PAD = 10
-        COLS = 6
+        slot_size = 64
+        slot_pad = 10
+        cols = 6
         desc_area_height = 120
 
         grid_x = panel_x + 30
@@ -204,13 +204,13 @@ class InventoryUI:
             screen.blit(msg_surf, (grid_x, grid_y))
         else:
             for idx, stack in enumerate(filtered):
-                row = idx // COLS
-                col = idx % COLS
+                row = idx // cols
+                col = idx % cols
 
-                x = grid_x + col * (SLOT_SIZE + SLOT_PAD)
-                y = grid_y + row * (SLOT_SIZE + SLOT_PAD)
+                x = grid_x + col * (slot_size + slot_pad)
+                y = grid_y + row * (slot_size + slot_pad)
 
-                rect = pygame.Rect(x, y, SLOT_SIZE, SLOT_SIZE)
+                rect = pygame.Rect(x, y, slot_size, slot_pad)
                 if rect.bottom > max_grid_bottom:
                     break
 

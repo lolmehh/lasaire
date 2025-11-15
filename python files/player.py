@@ -13,7 +13,7 @@ class Player:
         self.speed = speed  # pixels per second
 
         # Visuals
-        self.size = 30
+        self.size = 35
         self.color = (255, 0, 0)
 
         # Basic stats
@@ -22,7 +22,7 @@ class Player:
 
         # Inventory
         self.inventory: list[ItemStack] = []
-        self.inventory_max_slots = 20  # change this if you want more/less slots
+        self.inventory_max_slots = 20  # change this if you want more/fewer slots
 
         # Equipped items
         self.equipped_weapon: Item | None = None

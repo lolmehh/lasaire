@@ -1,7 +1,7 @@
 import sys
 import pygame
 from graphs import Button, get_screen_resolution
-from functions import start_game, load_game
+from functions import start_game
 
 def quit_game():
     print("Exiting game...")
@@ -57,8 +57,7 @@ def main():
         # When start_game returns, we come back to this menu loop.
 
     def on_load():
-        fade_out(screen, color=(0, 0, 0), speed=8)
-        load_game(screen)
+        pass
 
     def on_quit():
         quit_game()
