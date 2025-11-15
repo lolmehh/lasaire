@@ -5,7 +5,9 @@ import math
 from graphs import Button
 from gui import SettingsMenu
 
-from grid import Grid, Player    # or whatever modules you import
+from grid import Grid    # or whatever modules you import
+from items import ItemStack, create_item
+
 
 # WORLD / CAMERA SETTINGS
 
@@ -83,18 +85,24 @@ class Grid:
             pygame.draw.line(screen, GRID_COLOR, (0, sy), (screen_w, sy))
             y += self.tile_size
 
-
-# movement
-
 class Player:
     def __init__(self, x, y, speed=300):
         # world coordinates (floats for smoothness)
         self.x = float(x)
         self.y = float(y)
         self.speed = speed  # pixels per second
+
+        # Visuals
         self.size = 30
         self.color = (255, 0, 0)
 
+        # Inventory
+        self.inventory: list[ItemStack] = []
+        self.inventory_max_slots = 20  # change this if you want more/less slots
+
+    # -----------------------------
+    # Movement
+    # -----------------------------
     def handle_input(self, keys, dt):
         dx = 0
         dy = 0
@@ -131,6 +139,88 @@ class Player:
         rect.center = (int(screen_x), int(screen_y))
         pygame.draw.rect(screen, self.color, rect)
 
+    # -----------------------------
+    # Inventory helpers
+    # -----------------------------
+    def add_item(self, item, amount: int = 1) -> bool:
+        """
+        Add an Item (or multiple) to the inventory.
+
+        You can pass:
+          - an Item instance, or
+          - an item_id string (e.g. "slime_goop")
+
+        Returns True if everything was added, False if there's not enough space.
+        """
+
+        # If we got an item_id string instead of an Item instance, create it:
+        if isinstance(item, str):
+            item = create_item(item)
+
+        # If it's stackable, try to add to an existing stack first
+        if item.stackable:
+            for stack in self.inventory:
+                if stack.item.id == item.id and not stack.is_full():
+                    can_add = item.max_stack - stack.amount
+                    to_add = min(can_add, amount)
+                    stack.amount += to_add
+                    amount -= to_add
+                    if amount <= 0:
+                        return True  # everything added
+
+        # If there's still some amount left, we need new slots
+        while amount > 0:
+            if len(self.inventory) >= self.inventory_max_slots:
+                # No more slots
+                return False
+
+            to_add = min(amount, item.max_stack if item.stackable else 1)
+            self.inventory.append(ItemStack(item, to_add))
+            amount -= to_add
+
+        return True
+
+    def remove_item(self, item_id: str, amount: int = 1) -> bool:
+        """
+        Remove a certain amount of an item from the inventory.
+        Returns True if successful, False if not enough items.
+        """
+        for stack in list(self.inventory):  # copy so we can remove safely
+            if stack.item.id == item_id:
+                if stack.amount > amount:
+                    stack.amount -= amount
+                    return True
+                elif stack.amount == amount:
+                    self.inventory.remove(stack)
+                    return True
+                else:
+                    # Stack has less than we want: remove it and keep going
+                    amount -= stack.amount
+                    self.inventory.remove(stack)
+                    if amount <= 0:
+                        return True
+        return False
+
+    def count_item(self, item_id: str) -> int:
+        """
+        How many of this item the player has in total.
+        """
+        total = 0
+        for stack in self.inventory:
+            if stack.item.id == item_id:
+                total += stack.amount
+        return total
+
+    def debug_print_inventory(self):
+        """
+        Handy while developing: prints the inventory to the console.
+        """
+        print("=== INVENTORY ===")
+        if not self.inventory:
+            print("(empty)")
+        for stack in self.inventory:
+            print(f"{stack.item.name} x{stack.amount}")
+        print("=================")
 def start_game(screen):
     """Main game loop. main.py calls: start_game(screen)"""
     clock = pygame.time.Clock()
@@ -141,11 +231,16 @@ def start_game(screen):
     # Start player in the center of the world
     player = Player(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, speed=300)
 
+    # Give some starting items so you can see the inventory working
+    player.add_item("rusty_sword", 1)
+    player.add_item("small_potion", 2)
+    player.add_item("slime_goop", 5)
+
     # --- GUI / settings ---
     screen_w, screen_h = screen.get_size()
     button_size = 50
 
-    # Top-right settings button (⚙)
+    # Top-right settings button (⚙ or "+")
     settings_button = Button(
         screen_w - button_size - 10,
         10,
@@ -164,15 +259,22 @@ def start_game(screen):
     }
 
     paused = False
+    inventory_open = False
+
+    # Font for the inventory text
+    font = pygame.font.SysFont(None, 24)
 
     def on_settings_close():
         nonlocal paused
-        paused = False
+        # Only unpause if the inventory is not open
+        if not inventory_open:
+            paused = False
 
     def go_back_to_main_menu():
         # Called when the user clicks "Return to main menu" in Settings
-        nonlocal paused, running
+        nonlocal paused, running, inventory_open
         paused = False
+        inventory_open = False
         running = False   # this will exit the game loop, then main.py shows the menu again
 
     settings_menu = SettingsMenu(
@@ -181,7 +283,6 @@ def start_game(screen):
         on_close=on_settings_close,
         on_return_to_menu=go_back_to_main_menu,
     )
-
 
     def open_settings():
         nonlocal paused
@@ -204,9 +305,18 @@ def start_game(screen):
                 # While the menu is open, only it gets the events
                 settings_menu.handle_event(event)
             else:
-                # ESC: return to main menu (back to main.py)
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                    running = False
+                # Keyboard shortcuts when menu is not open
+                if event.type == pygame.KEYDOWN:
+                    # ESC: return to main menu (back to main.py)
+                    if event.key == pygame.K_ESCAPE:
+                        running = False
+                    # I: open/close inventory
+                    elif event.key == pygame.K_i:
+                        inventory_open = not inventory_open
+                        if inventory_open or settings_menu.visible:
+                            paused = True
+                        else:
+                            paused = False
 
                 # Settings button only active when menu is not open
                 settings_button.handle_event(event)
@@ -229,6 +339,32 @@ def start_game(screen):
         player.draw(screen, camera)
         settings_button.draw(screen)
         settings_menu.draw()
+
+        # --- Inventory overlay ---
+        if inventory_open:
+            panel_width = 300
+            panel_height = 400
+            panel_surface = pygame.Surface((panel_width, panel_height), pygame.SRCALPHA)
+            panel_surface.fill((0, 0, 0, 180))  # semi-transparent black
+            panel_x = 20
+            panel_y = 20
+            screen.blit(panel_surface, (panel_x, panel_y))
+
+            # Title
+            title_surf = font.render("Inventory (I to close)", True, (255, 255, 255))
+            screen.blit(title_surf, (panel_x + 10, panel_y + 10))
+
+            # Items
+            y = panel_y + 40
+            if not player.inventory:
+                text_surf = font.render("(empty)", True, (200, 200, 200))
+                screen.blit(text_surf, (panel_x + 10, y))
+            else:
+                for stack in player.inventory:
+                    line = f"{stack.item.name} x{stack.amount}"
+                    text_surf = font.render(line, True, (220, 220, 220))
+                    screen.blit(text_surf, (panel_x + 10, y))
+                    y += 24
 
         pygame.display.flip()
 
