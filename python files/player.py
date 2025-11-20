@@ -27,9 +27,9 @@ class Player:
         # Equipped items
         self.equipped_weapon: Item | None = None
 
-    # -----------------------------
-    # Movement
-    # -----------------------------
+    """
+    Movement
+    """
     def handle_input(self, keys, dt):
         dx = 0
         dy = 0
@@ -56,7 +56,7 @@ class Player:
     def clamp_to_world(self, world_width, world_height):
         """
         Keep player inside the world rectangle.
-        We pass world size in from the game loop to avoid global constants.
+        pass world size in from the game loop to avoid global constants.
         """
         half = self.size / 2
         self.x = max(half, min(world_width - half, self.x))
@@ -81,7 +81,7 @@ class Player:
 
         You can pass:
           - an Item instance, or
-          - an item_id string (e.g. "slime_goop")
+          - an item_id string (e.g. "slime_goo")
 
         Returns True if everything was added, False if there's not enough space.
         """
@@ -93,7 +93,7 @@ class Player:
         # If it's stackable, try to add to an existing stack first
         if item.stackable:
             for stack in self.inventory:
-                if stack.item.id == item.id and not stack.is_full():
+                if stack.item.unique_id == item.unique_id and not stack.is_full():
                     can_add = item.max_stack - stack.amount
                     to_add = min(can_add, amount)
                     stack.amount += to_add
@@ -179,7 +179,7 @@ class Player:
     def use_item(self, item: Item):
         """
         Generic "use or equip" based on item category.
-        Called by the inventory UI when you right-click or press Enter.
+        Called by the inventory UI when right-click or press Enter.
         """
         cat = (item.category or "").lower()
         if cat == "weapon":
@@ -197,7 +197,7 @@ class Player:
     def get_attack_damage(self, base_damage: int = 1) -> int:
         """
         Example: base damage + weapon damage.
-        You can hook this into your combat system later.
+        hook this into combat system later.
         """
         weapon_damage = self.equipped_weapon.damage if self.equipped_weapon else 0
         return base_damage + weapon_damage

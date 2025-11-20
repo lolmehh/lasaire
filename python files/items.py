@@ -1,11 +1,13 @@
 # items.py
+import uuid
 
 class Item:
     def __init__(
         self,
-        item_id: str,
+        template_id: str,     # rusty_sword, slime_goo, etc.
+        unique_id: str,       # actual instance ID
         name: str,
-        category: str,       # "weapon", "consumable", "material", etc.
+        category: str,
         description: str = "",
         damage: int = 0,
         heal_amount: int = 0,
@@ -13,7 +15,8 @@ class Item:
         stackable: bool = True,
         max_stack: int = 99,
     ):
-        self.id = item_id
+        self.template_id = template_id
+        self.unique_id = unique_id
         self.name = name
         self.category = category
         self.description = description
@@ -37,10 +40,7 @@ class ItemStack:
             return self.amount >= 1
         return self.amount >= self.item.max_stack
 
-
-# -------------------------------------------------------------------
 # Item definitions
-# -------------------------------------------------------------------
 
 ITEM_DEFS = {
     # Weapons
@@ -109,18 +109,22 @@ ITEM_DEFS = {
     },
 }
 
+def generate_uid():
+    return str(uuid.uuid4())
+
 
 def create_item(item_id: str) -> Item:
     """
     Factory function:
-      create_item("slime_goop") -> new Item instance
+      create_item("slime_goo") -> new Item instance
     """
     if item_id not in ITEM_DEFS:
         raise ValueError(f"Unknown item_id: {item_id}")
 
     data = ITEM_DEFS[item_id]
     return Item(
-        item_id=item_id,
+        template_id=item_id,
+        unique_id=generate_uid(),
         name=data["name"],
         category=data["category"],
         description=data["description"],
@@ -130,3 +134,5 @@ def create_item(item_id: str) -> Item:
         stackable=data["stackable"],
         max_stack=data["max_stack"],
     )
+
+

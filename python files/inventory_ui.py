@@ -210,7 +210,7 @@ class InventoryUI:
                 x = grid_x + col * (slot_size + slot_pad)
                 y = grid_y + row * (slot_size + slot_pad)
 
-                rect = pygame.Rect(x, y, slot_size, slot_pad)
+                rect = pygame.Rect(x, y, slot_size, slot_size)
                 if rect.bottom > max_grid_bottom:
                     break
 

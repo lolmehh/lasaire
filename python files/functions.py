@@ -31,7 +31,7 @@ def start_game(screen):
 
     # Give some starting items so you can see the inventory working
     player.add_item("rusty_sword", 2)
-    player.add_item("small_hp_potion", 2)
+    player.add_item("small_hp_potion", 200)
     player.add_item("slime_goo", 5)
 
     # --- GUI / settings ---
